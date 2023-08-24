@@ -19,14 +19,29 @@ test("anchor", async () => {
 		provider,
 	);
 
+        const dataKeypair = Keypair.generate();
+
+	const ix = await puppetProgram.account.data.createInstruction(
+		dataKeypair,
+		1000,
+	);
+        console.log(ix);
+
 	const puppetKeypair = Keypair.generate();
 	await puppetProgram.methods
 		.initialize()
+                .preInstructions([ix])
 		.accounts({
 			puppet: puppetKeypair.publicKey,
 		})
-		.signers([puppetKeypair])
+		.signers([puppetKeypair, dataKeypair])
 		.rpc();
+
+        /* console.log(puppetProgram); */
+
+        let connection = puppetProgram.provider.connection;
+
+        console.log(await connection.getAccountInfoAndContext(dataKeypair.publicKey));
 
 	const data = new BN(123456);
 	await puppetProgram.methods
